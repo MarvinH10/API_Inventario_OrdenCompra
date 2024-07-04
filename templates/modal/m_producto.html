@@ -1,0 +1,61 @@
+<!-- Modal para registrar productos -->
+<div class="modal fade" id="productModal" tabindex="-1" role="dialog" aria-labelledby="productModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="productModalLabel">Registrar Producto</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="productForm">
+                    <div class="form-group">
+                        <label for="product_name">Nombre del Producto:</label>
+                        <input type="text" class="form-control" id="product_name" name="product_name" oninput="checkRequiredFields()" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="category">Clase:</label>
+                        <select class="form-control" id="category" name="category" onchange="loadSubcategories(this.value, 'subcategory1')">
+
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="subcategory1">Área Aplicación:</label>
+                        <select class="form-control" id="subcategory1" name="subcategory1" onchange="loadSubcategories(this.value, 'subcategory2')" disabled>
+
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="subcategory2">Tipo de Producto:</label>
+                        <select class="form-control" id="subcategory2" name="subcategory2" onchange="loadSubcategories(this.value, 'subcategory3')" disabled>
+
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="subcategory3">Activo / Presentación:</label>
+                        <select class="form-control" id="subcategory3" name="subcategory3" onchange="loadSubcategories(this.value, 'subcategory4')" disabled>
+
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="subcategory4">Marca:</label>
+                        <select class="form-control" id="subcategory4" name="subcategory4" disabled>
+
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="sale_price">Precio Venta:</label>
+                        <input type="number" class="form-control" id="sale_price" name="sale_price" step="0.01" oninput="checkRequiredFields()" required>
+                    </div>
+                    <h3>Atributos del Producto</h3>
+                    <div id="attributeContainer">
+                        <!-- Atributos se llenarán dinámicamente -->
+                    </div>
+                    <button type="button" class="btn btn-secondary mt-3" id="addAttributeButton" onclick="addAttribute()" disabled>+ Nuevo Atributo</button>
+                    <button type="button" class="btn btn-primary mt-3" onclick="addProduct()">Agregar Producto</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
