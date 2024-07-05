@@ -96,3 +96,14 @@ def create_product(uid, product):
         create_variant(uid, product_template_id, attribute, models)
 
     return product_template_id
+
+#USADO SOLO PARA SUBIR CON EL IMPUESTO DE 0%
+def create_and_adjust_taxes(uid, product):
+    models = xmlrpc.client.ServerProxy('{}/xmlrpc/2/object'.format(ODOO_URL))
+    product_template_id = create_product(uid, product)  # Crear el producto primero sin especificar 'taxes_id'
+
+    # Ajustar los impuestos después de la creación
+    exo_tax_id = [5]  # ID del impuesto "0% Exo"
+    models.execute_kw(DB, uid, PASSWORD, 'product.template', 'write', [[product_template_id], {'taxes_id': [(6, 0, exo_tax_id)]}])
+
+    return product_template_id

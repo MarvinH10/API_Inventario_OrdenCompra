@@ -14,46 +14,50 @@
                         <label for="product_name">Nombre del Producto:</label>
                         <input type="text" class="form-control" id="product_name" name="product_name" oninput="checkRequiredFields()" required>
                     </div>
-                    <div class="form-group">
-                        <label for="category">Clase:</label>
-                        <select class="form-control" id="category" name="category" onchange="loadSubcategories(this.value, 'subcategory1')">
+                    <div class="category-container">
+                        <div class="form-group">
+                            <label for="category">Clase:</label>
+                            <select class="form-control" id="category" name="category" onchange="loadSubcategories(this.value, 'subcategory1')" required>
 
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="subcategory1">Área Aplicación:</label>
-                        <select class="form-control" id="subcategory1" name="subcategory1" onchange="loadSubcategories(this.value, 'subcategory2')" disabled>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="subcategory1">Área Aplicación:</label>
+                            <select class="form-control" id="subcategory1" name="subcategory1" onchange="loadSubcategories(this.value, 'subcategory2')" disabled>
 
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="subcategory2">Tipo de Producto:</label>
-                        <select class="form-control" id="subcategory2" name="subcategory2" onchange="loadSubcategories(this.value, 'subcategory3')" disabled>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="subcategory2">Tipo de Producto:</label>
+                            <select class="form-control" id="subcategory2" name="subcategory2" onchange="loadSubcategories(this.value, 'subcategory3')" disabled>
 
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="subcategory3">Activo / Presentación:</label>
-                        <select class="form-control" id="subcategory3" name="subcategory3" onchange="loadSubcategories(this.value, 'subcategory4')" disabled>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="subcategory3">Activo / Presentación:</label>
+                            <select class="form-control" id="subcategory3" name="subcategory3" onchange="loadSubcategories(this.value, 'subcategory4')" disabled>
 
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="subcategory4">Marca:</label>
-                        <select class="form-control" id="subcategory4" name="subcategory4" disabled>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="subcategory4">Marca:</label>
+                            <select class="form-control" id="subcategory4" name="subcategory4" disabled>
 
-                        </select>
+                            </select>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label for="sale_price">Precio Venta:</label>
-                        <input type="number" class="form-control" id="sale_price" name="sale_price" step="0.01" oninput="checkRequiredFields()" required>
+                        <input type="number" class="form-control" id="sale_price" name="sale_price" value="0" step="0.01" oninput="checkRequiredFields()" required>
                     </div>
                     <h3>Atributos del Producto</h3>
                     <div id="attributeContainer">
                         <!-- Atributos se llenarán dinámicamente -->
                     </div>
-                    <button type="button" class="btn btn-secondary mt-3" id="addAttributeButton" onclick="addAttribute()" disabled>+ Nuevo Atributo</button>
-                    <button type="button" class="btn btn-primary mt-3" onclick="addProduct()">Agregar Producto</button>
+                    <div class="form-buttons">
+                        <button type="button" class="btn btn-secondary mt-3" id="addAttributeButton" onclick="addAttribute()" disabled>+ Nuevo Atributo</button>
+                        <button type="button" class="btn btn-primary mt-3" onclick="addProduct()">Agregar Producto</button>
+                    </div>
                 </form>
             </div>
         </div>

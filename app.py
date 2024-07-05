@@ -56,7 +56,7 @@ def register_product_route():
             for product in products:
                 product['default_code'] = 'REF-{}'.format(product['product_name'].replace(' ', '').upper())
                 print("Registering product:", product)  # Debug statement
-                product_template_id = odoo_api.create_product(uid, product)
+                product_template_id = odoo_api.create_and_adjust_taxes(uid, product)
 
             return jsonify({'message': 'Productos registrados con éxito'})
         else:

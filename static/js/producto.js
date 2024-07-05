@@ -105,10 +105,10 @@ function addAttribute() {
     attributeGroup.className = 'form-row';
 
     attributeGroup.innerHTML = `
-        <div class="col">
+        <div class="">
             <label for="attribute">Atributo:</label>
             <select name="attribute" class="form-control" onchange="loadAttributeValues(this)">
-                <option value="" disabled>Seleccione un atributo</option>
+                <option value="">Seleccione un atributo</option>
                 ${Object.keys(attributes).map(attrId => `<option value="${attrId}">${attributes[attrId].name}</option>`).join('')}
             </select>
         </div>
@@ -122,7 +122,7 @@ function addAttribute() {
             <label for="attribute_prices">Precios Extra:</label>
             <div name="attribute_prices" class="form-group"></div>
         </div>
-        <div class="col">
+        <div class="">
             <br/>
             <button type="button" class="btn btn-outline-danger mt-2" onclick="removeAttribute(this)"><i class="bi bi-trash-fill"></i> Eliminar</button>
         </div>
@@ -217,6 +217,20 @@ function removeAttribute(button) {
 }
 
 function addProduct() {
+    const categoryName = document.getElementById('category').selectedOptions[0].text;
+    if (categoryName === 'Seleccione una opción' || categoryName === '') {
+        Swal.fire({
+            title: 'Warning',
+            text: 'Por favor, seleccione al menos una Clase antes de añadir el producto.',
+            icon: 'warning',
+            confirmButtonText: 'Ok',
+            customClass: {
+                popup: 'center-alert'
+            }
+        });
+        return;
+    }
+
     const product = {
         product_name: document.getElementById('product_name').value,
         category: document.getElementById('category').value ? document.getElementById('category').value : '',
@@ -227,21 +241,23 @@ function addProduct() {
             document.getElementById('subcategory4').value && document.getElementById('subcategory4').selectedOptions[0].text !== 'No hay más subcategorías' ? document.getElementById('subcategory4').value : ''
         ],
         sale_price: parseFloat(document.getElementById('sale_price').value),
-        attributes: Array.from(document.querySelectorAll('#attributeContainer .form-row')).map(attributeGroup => {
-            const attribute = attributeGroup.querySelector('[name="attribute"]').value;
-            const attributeValues = $(attributeGroup.querySelector('[name="attribute_values"]')).val();
-            const attributePrices = Array.from(attributeGroup.querySelector('[name="attribute_prices"]').children).map(priceInput => ({
-                id: priceInput.getAttribute('data-value-id'),
-                price_extra: parseFloat(priceInput.value) || 0
-            }));
-            return {
-                attribute: attribute,
-                attribute_values: attributeValues.map((value, index) => ({
-                    id: value,
-                    price_extra: attributePrices.find(price => price.id === value)?.price_extra || 0
-                }))
-            };
-        }),
+        attributes: Array.from(document.querySelectorAll('#attributeContainer .form-row'))
+            .map(attributeGroup => {
+                const attribute = attributeGroup.querySelector('[name="attribute"]').value;
+                const attributeValues = $(attributeGroup.querySelector('[name="attribute_values"]')).val() || [];
+                const attributePrices = Array.from(attributeGroup.querySelector('[name="attribute_prices"]').children).map(priceInput => ({
+                    id: priceInput.getAttribute('data-value-id'),
+                    price_extra: parseFloat(priceInput.value) || 0
+                }));
+                return {
+                    attribute: attribute,
+                    attribute_values: attributeValues.map(valueId => ({
+                        id: valueId,
+                        price_extra: attributePrices.find(price => price.id === valueId)?.price_extra || 0
+                    }))
+                };
+            })
+            .filter(attr => attr.attribute_values.length > 0), // Filtra los atributos que no tienen valores seleccionados
         category_name: document.getElementById('category').selectedOptions[0].text,
         subcategory_names: [
             document.getElementById('subcategory1').selectedOptions[0]?.text !== 'No hay más subcategorías' ? document.getElementById('subcategory1').selectedOptions[0]?.text : '',
@@ -266,24 +282,51 @@ function addProduct() {
     document.getElementById('attributeContainer').innerHTML = '';
 }
 
+
 function updateProductList() {
     const productList = document.getElementById('productList');
     productList.innerHTML = '';
     products.forEach((product, index) => {
         const categoryPath = [product.category_name, ...product.subcategory_names].filter(Boolean).filter(name => name !== 'Seleccione una opción').join(' / ');
         const attributesDisplay = product.attribute_names.map(attr => {
-            return `${attr.attributeName}: ${attr.attribute_values.join(', ')}`;
-        }).join('; ');
+            if (attr.attribute_values.length > 0) {
+                return `${attr.attributeName}: ${attr.attribute_values.join(', ')}`;
+            }
+            return '';
+        }).filter(attrDisplay => attrDisplay !== '').join('; ');
         const productRow = document.createElement('tr');
         productRow.innerHTML = `
             <td>${product.product_name}</td>
             <td>${categoryPath}</td>
-            <td>${product.sale_price}</td>
+            <td>S/. ${product.sale_price.toFixed(2)}</td>
             <td>${attributesDisplay}</td>
-            <td><button class="btn btn-danger btn-sm" onclick="removeProduct(${index})">Eliminar</button></td>
+            <td>
+                <button class="btn btn-info btn-sm" onclick="editProduct(${index})"><i class="bi bi-pencil-square"></i></button>
+                <button class="btn btn-secondary btn-sm" onclick="duplicateProduct(${index})"><i class="bi bi-files"></i></button>
+                <button class="btn btn-danger btn-sm" onclick="removeProduct(${index})"><i class="bi bi-trash"></i></button>
+            </td>
         `;
         productList.appendChild(productRow);
     });
+}
+
+function editProduct(index) {
+    const product = products[index];
+
+    // Cargar información básica del producto
+    document.getElementById('product_name').value = product.product_name;
+    document.getElementById('category').value = product.category;
+    document.getElementById('sale_price').value = product.sale_price.toFixed(2);
+
+    $('#productModal').modal('show'); // Mostrar el modal con los datos cargados
+}
+
+function duplicateProduct(index) {
+    // Lógica para duplicar el producto y agregarlo a la lista
+    const product = products[index];
+    const newProduct = {...product}; // Crear una copia superficial del producto
+    products.push(newProduct);
+    updateProductList(); // Actualizar la lista con el nuevo producto duplicado
 }
 
 function removeProduct(index) {
