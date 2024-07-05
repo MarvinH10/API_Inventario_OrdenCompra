@@ -1,5 +1,7 @@
 let products = [];
 let attributes = {};
+let isEditMode = false;
+let editingIndex = null;
 
 document.addEventListener('DOMContentLoaded', function () {
     $('#productModal').on('show.bs.modal', function () {
@@ -55,7 +57,9 @@ function loadSubcategories(parentId, targetId) {
     // Restablecer todas las subcategorías subsiguientes
     let nextTargetId = getNextTargetId(targetId);
     while (nextTargetId) {
-        resetSubcategories(nextTargetId);
+        const nextSelect = document.getElementById(nextTargetId);
+        nextSelect.innerHTML = '<option>No hay más subcategorías</option>';
+        nextSelect.disabled = true;
         nextTargetId = getNextTargetId(nextTargetId);
     }
 
@@ -217,69 +221,85 @@ function removeAttribute(button) {
 }
 
 function addProduct() {
-    const categoryName = document.getElementById('category').selectedOptions[0].text;
-    if (categoryName === 'Seleccione una opción' || categoryName === '') {
-        Swal.fire({
-            title: 'Warning',
-            text: 'Por favor, seleccione al menos una Clase antes de añadir el producto.',
-            icon: 'warning',
-            confirmButtonText: 'Ok',
-            customClass: {
-                popup: 'center-alert'
-            }
-        });
-        return;
-    }
+    if (!isEditMode) {
+        const productName = document.getElementById('product_name').value.trim();
+        const categoryName = document.getElementById('category').selectedOptions[0].text;
+        if (productName === '') {
+            Swal.fire({
+                title: 'Advertencia',
+                text: 'Por favor, ingrese el nombre del producto.',
+                icon: 'warning',
+                confirmButtonText: 'Ok',
+                customClass: {
+                    popup: 'center-alert'
+                }
+            });
+            return;
+        } else if (categoryName === 'Seleccione una opción' || categoryName === '') {
+            Swal.fire({
+                title: 'Advertencia',
+                text: 'Por favor, seleccione al menos una categoría.',
+                icon: 'warning',
+                confirmButtonText: 'Ok',
+                customClass: {
+                    popup: 'center-alert'
+                }
+            });
+            return;
+        }
 
-    const product = {
-        product_name: document.getElementById('product_name').value,
-        category: document.getElementById('category').value ? document.getElementById('category').value : '',
-        subcategories: [
-            document.getElementById('subcategory1').value && document.getElementById('subcategory1').selectedOptions[0].text !== 'No hay más subcategorías' ? document.getElementById('subcategory1').value : '',
-            document.getElementById('subcategory2').value && document.getElementById('subcategory2').selectedOptions[0].text !== 'No hay más subcategorías' ? document.getElementById('subcategory2').value : '',
-            document.getElementById('subcategory3').value && document.getElementById('subcategory3').selectedOptions[0].text !== 'No hay más subcategorías' ? document.getElementById('subcategory3').value : '',
-            document.getElementById('subcategory4').value && document.getElementById('subcategory4').selectedOptions[0].text !== 'No hay más subcategorías' ? document.getElementById('subcategory4').value : ''
-        ],
-        sale_price: parseFloat(document.getElementById('sale_price').value),
-        attributes: Array.from(document.querySelectorAll('#attributeContainer .form-row'))
-            .map(attributeGroup => {
-                const attribute = attributeGroup.querySelector('[name="attribute"]').value;
-                const attributeValues = $(attributeGroup.querySelector('[name="attribute_values"]')).val() || [];
-                const attributePrices = Array.from(attributeGroup.querySelector('[name="attribute_prices"]').children).map(priceInput => ({
-                    id: priceInput.getAttribute('data-value-id'),
-                    price_extra: parseFloat(priceInput.value) || 0
-                }));
+        const product = {
+            product_name: document.getElementById('product_name').value,
+            category: document.getElementById('category').value ? document.getElementById('category').value : '',
+            subcategories: [
+                document.getElementById('subcategory1').value && document.getElementById('subcategory1').selectedOptions[0].text !== 'No hay más subcategorías' ? document.getElementById('subcategory1').value : '',
+                document.getElementById('subcategory2').value && document.getElementById('subcategory2').selectedOptions[0].text !== 'No hay más subcategorías' ? document.getElementById('subcategory2').value : '',
+                document.getElementById('subcategory3').value && document.getElementById('subcategory3').selectedOptions[0].text !== 'No hay más subcategorías' ? document.getElementById('subcategory3').value : '',
+                document.getElementById('subcategory4').value && document.getElementById('subcategory4').selectedOptions[0].text !== 'No hay más subcategorías' ? document.getElementById('subcategory4').value : ''
+            ],
+            sale_price: parseFloat(document.getElementById('sale_price').value),
+            attributes: Array.from(document.querySelectorAll('#attributeContainer .form-row'))
+                .map(attributeGroup => {
+                    const attribute = attributeGroup.querySelector('[name="attribute"]').value;
+                    const attributeValues = $(attributeGroup.querySelector('[name="attribute_values"]')).val() || [];
+                    const attributePrices = Array.from(attributeGroup.querySelector('[name="attribute_prices"]').children).map(priceInput => ({
+                        id: priceInput.getAttribute('data-value-id'),
+                        price_extra: parseFloat(priceInput.value) || 0
+                    }));
+                    return {
+                        attribute: attribute,
+                        attribute_values: attributeValues.map(valueId => ({
+                            id: valueId,
+                            price_extra: attributePrices.find(price => price.id === valueId)?.price_extra || 0
+                        }))
+                    };
+                })
+                .filter(attr => attr.attribute_values.length > 0), // Filtra los atributos que no tienen valores seleccionados
+            category_name: document.getElementById('category').selectedOptions[0].text,
+            subcategory_names: [
+                document.getElementById('subcategory1').selectedOptions[0]?.text !== 'No hay más subcategorías' ? document.getElementById('subcategory1').selectedOptions[0]?.text : '',
+                document.getElementById('subcategory2').selectedOptions[0]?.text !== 'No hay más subcategorías' ? document.getElementById('subcategory2').selectedOptions[0]?.text : '',
+                document.getElementById('subcategory3').selectedOptions[0]?.text !== 'No hay más subcategorías' ? document.getElementById('subcategory3').selectedOptions[0]?.text : '',
+                document.getElementById('subcategory4').selectedOptions[0]?.text !== 'No hay más subcategorías' ? document.getElementById('subcategory4').selectedOptions[0]?.text : ''
+            ],
+            attribute_names: Array.from(document.querySelectorAll('#attributeContainer .form-row')).map(attributeGroup => {
+                const attributeName = attributeGroup.querySelector('[name="attribute"]').selectedOptions[0].text;
+                const attributeValuesNames = $(attributeGroup.querySelector('[name="attribute_values"]')).find(':selected').toArray().map(option => option.text);
                 return {
-                    attribute: attribute,
-                    attribute_values: attributeValues.map(valueId => ({
-                        id: valueId,
-                        price_extra: attributePrices.find(price => price.id === valueId)?.price_extra || 0
-                    }))
+                    attributeName: attributeName,
+                    attribute_values: attributeValuesNames
                 };
             })
-            .filter(attr => attr.attribute_values.length > 0), // Filtra los atributos que no tienen valores seleccionados
-        category_name: document.getElementById('category').selectedOptions[0].text,
-        subcategory_names: [
-            document.getElementById('subcategory1').selectedOptions[0]?.text !== 'No hay más subcategorías' ? document.getElementById('subcategory1').selectedOptions[0]?.text : '',
-            document.getElementById('subcategory2').selectedOptions[0]?.text !== 'No hay más subcategorías' ? document.getElementById('subcategory2').selectedOptions[0]?.text : '',
-            document.getElementById('subcategory3').selectedOptions[0]?.text !== 'No hay más subcategorías' ? document.getElementById('subcategory3').selectedOptions[0]?.text : '',
-            document.getElementById('subcategory4').selectedOptions[0]?.text !== 'No hay más subcategorías' ? document.getElementById('subcategory4').selectedOptions[0]?.text : ''
-        ],
-        attribute_names: Array.from(document.querySelectorAll('#attributeContainer .form-row')).map(attributeGroup => {
-            const attributeName = attributeGroup.querySelector('[name="attribute"]').selectedOptions[0].text;
-            const attributeValuesNames = $(attributeGroup.querySelector('[name="attribute_values"]')).find(':selected').toArray().map(option => option.text);
-            return {
-                attributeName: attributeName,
-                attribute_values: attributeValuesNames
-            };
-        })
-    };
+        };
 
-    products.push(product);
+        products.push(product);
+    }
     updateProductList();
     $('#productModal').modal('hide');
     document.getElementById('productForm').reset();
     document.getElementById('attributeContainer').innerHTML = '';
+    isEditMode = false;
+    editingIndex = null;
 }
 
 
@@ -308,17 +328,65 @@ function updateProductList() {
         `;
         productList.appendChild(productRow);
     });
+    //console.log(productList)
 }
 
 function editProduct(index) {
+    //console.log(index)
+    isEditMode = true;
+    editingIndex = index;
     const product = products[index];
 
-    // Cargar información básica del producto
     document.getElementById('product_name').value = product.product_name;
     document.getElementById('category').value = product.category;
-    document.getElementById('sale_price').value = product.sale_price.toFixed(2);
+    document.getElementById('sale_price').value = product.sale_price.toString();
 
-    $('#productModal').modal('show'); // Mostrar el modal con los datos cargados
+    ['subcategory1', 'subcategory2', 'subcategory3', 'subcategory4'].forEach((id, idx) => {
+        document.getElementById(id).value = product.subcategories[idx];
+    });
+
+    document.getElementById('attributeContainer').innerHTML = '';
+    document.getElementById('modalActionButton').textContent = 'Editar Producto';
+    document.getElementById('modalActionButton').onclick = function() {
+        addProduct();
+    };
+
+    product.attributes.forEach(attr => {
+        addAttribute(); // Añadir un nuevo grupo de atributos
+        const attributeGroups = document.querySelectorAll('#attributeContainer .form-row');
+        const lastGroup = attributeGroups[attributeGroups.length - 1];
+        const attributeSelect = lastGroup.querySelector('select[name="attribute"]');
+        const valuesSelect = lastGroup.querySelector('select[name="attribute_values"]');
+
+        // Configurar el atributo seleccionado
+        attributeSelect.value = attr.attribute;
+        loadAttributeValues(attributeSelect); // Llamar a la función que carga los valores basados en el atributo seleccionado
+
+        // Configurar los valores seleccionados
+        setTimeout(() => { // Utilizar setTimeout para asegurar que los valores se cargan después de ser añadidos al DOM
+            $(valuesSelect).val(attr.attribute_values.map(av => av.id)).trigger('change');
+            attr.attribute_values.forEach(av => {
+                const priceInput = document.createElement('input');
+                priceInput.type = 'number';
+                priceInput.className = 'form-control mb-2';
+                priceInput.value = av.price_extra.toString();
+                priceInput.setAttribute('data-value-id', av.id);
+                lastGroup.querySelector('[name="attribute_prices"]').appendChild(priceInput);
+            });
+        }, 500);
+    });
+
+    $('#productModal').modal('show');
+}
+
+function openAddProductModal() {
+    isEditMode = false;
+    editingIndex = null;
+    document.getElementById('productForm').reset();
+    document.getElementById('attributeContainer').innerHTML = '';
+    document.getElementById('modalActionButton').textContent = 'Agregar Producto';
+    document.getElementById('modalActionButton').onclick = addProduct;
+    $('#productModal').modal('show');
 }
 
 function duplicateProduct(index) {
