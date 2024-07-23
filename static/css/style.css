@@ -82,6 +82,11 @@ body {
     width: 100%;
 }
 
+#edit_addAttributeButton {
+    margin-top: 10px;
+    width: 100%;
+}
+
 #productForm {
     background-color: #fff;
     padding: 15px;
@@ -109,4 +114,37 @@ body {
 
 .button_contenedor{
     text-align: right;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Divide el espacio disponible en dos fracciones iguales */
+    column-gap: 20px; /* Espacio entre las columnas */
+    padding: 10px; /* Espacio alrededor de los elementos */
+}
+
+.price_extra_div,
+.reference_extra_div {
+    display: inline-block;
+    vertical-align: top;
+    margin-right: 10px;
+}
+
+.price_extra_div {
+    width: 44%;
+}
+
+.reference_extra_div {
+    width: 44%;
+}
+
+.form-groupname {
+    flex: 1;
+    padding: 0 6px;
+    margin-bottom: 15px;
+}
+
+.form-row {
+    display: flex;
+    justify-content: space-between;
 }

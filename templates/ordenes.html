@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Órdenes de Compra</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.5.0/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_order.css') }}">
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="#">Gestión Odoo</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item ">
+                    <a class="nav-link" href="/">Inicio <span class="sr-only">(current)</span></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/productos">Gestión de Productos</a>
+                </li>
+                <li class="nav-item active">
+                    <a class="nav-link" href="/ordenes">Órdenes de Compra</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <div class="container mt-5">
+        <h1>Gestión de Órdenes de Compra</h1>
+        <div id="supplier-info">
+            <button type="button" class="btn btn-outline-secondary" data-toggle="modal" data-target="#supplierModal">
+                <i class="bi bi-pencil"></i> Seleccionar Proveedor
+            </button>
+        </div>
+        <button type="button" class="btn btn-primary mt-3" data-toggle="modal" id="addProductButton" data-target="#productModal" disabled>Agregar Productos</button>
+        <table class="table table-bordered mt-3">
+            <thead>
+                <tr>
+                    <th>Productos</th>
+                    <th>Cantidad</th>
+                    <th>Precio Individual</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="orderList">
+                <!-- Lista de órdenes se llenará dinámicamente -->
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3">Precio Total:</td>
+                    <td id="totalPrice">0.00</td>
+                </tr>
+            </tfoot>
+        </table>
+        <button type="button" class="btn btn-primary mt-3" onclick="registerOrders()">Guardar Órdenes</button>
+    </div>
+
+    <!-- Modales -->
+    <div id="modals">
+        {% include 'modal/m_order.html' %}
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script src="/static/js/ordenes.js"></script>
+</body>
+</html>

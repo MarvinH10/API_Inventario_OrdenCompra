@@ -13,6 +13,25 @@
     <link rel="icon" href="data:;base64,iVBORw0KGgo=">
 </head>
 <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="#">Gestión Odoo</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item ">
+                    <a class="nav-link" href="/">Inicio <span class="sr-only">(current)</span></a>
+                </li>
+                <li class="nav-item active">
+                    <a class="nav-link" href="/productos">Gestión de Productos</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/ordenes">Órdenes de Compra</a>
+                </li>
+            </ul>
+        </div>
+    </nav> 
     <main class="container mt-5">
         <h1>Gestión de Productos</h1>
         <button type="button" class="btn btn-success" data-toggle="modal" data-target="#productModal">
@@ -30,6 +49,8 @@
                         <th>Producto</th>
                         <th>Categorías</th>
                         <th>Precio Venta</th>
+                        <th>Referencia Interna</th>
+                        <th>Referencia-Precio Extras</th>
                         <th>Valores de Atributos</th>
                         <th>Acciones</th>
                     </tr>

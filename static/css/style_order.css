@@ -1,0 +1,10 @@
+/* Ocultar las flechas de los inputs numéricos en la mayoría de los navegadores */
+.no-spinners::-webkit-inner-spin-button,
+.no-spinners::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.no-spinners {
+  -moz-appearance: textfield; /* Firefox */
+}

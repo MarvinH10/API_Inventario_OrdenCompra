@@ -1,0 +1,75 @@
+<!-- Modal para agregar productos -->
+<div class="modal fade" id="productModal" tabindex="-1" role="dialog" aria-labelledby="productModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="productModalLabel">Agregar Productos</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="productForm">
+                    <div class="form-group">
+                        <label for="order_product">Producto:</label>
+                        <select class="form-control" id="order_product" name="order_product" required>
+                            <!-- Opciones se llenarán dinámicamente -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="product_variants">Cantidad:</label>
+                        <table class="table table-bordered" id="product_variants">
+                            <tbody>
+                                <!-- Cantidad se llenará dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="form-group">
+                        <label for="product_variants_price">Precio:</label>
+                        <table class="table table-bordered" id="product_variants_price">
+                            <tbody>
+                                <!-- Precio se llenará dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="form-buttons">
+                        <button type="button" class="btn btn-secondary mt-3" data-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary mt-3" onclick="addProduct()">Agregar Producto</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para seleccionar proveedor -->
+<div class="modal fade" id="supplierModal" tabindex="-1" role="dialog" aria-labelledby="supplierModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="supplierModalLabel">Seleccionar Proveedor</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="supplierForm">
+                    <div class="form-group">
+                        <label for="supplier_name">Nombre del Proveedor:</label>
+                        <select class="form-control" id="supplier_name" name="supplier_name" required>
+                            <!-- Opciones se llenarán dinámicamente -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="supplier_reference">Referencia del Proveedor:</label>
+                        <input type="text" class="form-control" id="supplier_reference" name="supplier_reference" required>
+                    </div>
+                    <div class="form-buttons">
+                        <button type="button" class="btn btn-secondary mt-3" data-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary mt-3" onclick="saveSupplier()">Guardar Proveedor</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
