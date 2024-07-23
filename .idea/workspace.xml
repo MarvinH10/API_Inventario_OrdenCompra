@@ -4,21 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="dcd5c714-3256-482e-8786-a7dc2229a78d" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/odoo17_all.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/css/style_order.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/odoo1.9.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/app.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/odoo_api.py" beforeDir="false" afterPath="$PROJECT_DIR$/odoo_api.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/static/css/style.css" beforeDir="false" afterPath="$PROJECT_DIR$/static/css/style.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/static/js/producto.js" beforeDir="false" afterPath="$PROJECT_DIR$/static/js/producto.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/modal/m_producto.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/modal/m_producto.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/productos.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/productos.html" afterDir="false" />
-    </list>
+    <list default="true" id="dcd5c714-3256-482e-8786-a7dc2229a78d" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -99,7 +85,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1721703587685</updated>
-      <workItem from="1721703588923" duration="6762000" />
+      <workItem from="1721703588923" duration="7150000" />
     </task>
     <servers />
   </component>
