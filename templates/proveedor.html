@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Proveedores</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.5.0/font/bootstrap-icons.min.css">
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="#">Gestión Odoo</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="/">Inicio</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/productos">Gestión de Productos</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/ordenes">Órdenes de Compra</a>
+                </li>
+                <li class="nav-item active">
+                    <a class="nav-link" href="/proveedor">Gestión de Proveedores</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <div class="container mt-5">
+        <h1>Gestión de Proveedores</h1>
+        <button type="button" class="btn btn-primary mt-3" data-toggle="modal" data-target="#proveedorModal">Registrar Proveedor</button>
+        <table class="table table-bordered mt-3">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>RUC</th>
+                    <th>Dirección</th>
+                    <th>Ciudad</th>
+                    <th>Provincia</th>
+                    <th>Departamento</th>
+                    <th>Ubigeo</th>
+                    <th>Celular</th>
+                    <th>Web</th>
+                    <th>Actividades</th>
+                </tr>
+            </thead>
+            <tbody id="proveedorList">
+                <!-- Lista de proveedores se llenará dinámicamente -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Modal para registrar proveedor -->
+    <div class="modal fade" id="proveedorModal" tabindex="-1" role="dialog" aria-labelledby="proveedorModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="proveedorModalLabel">Registrar Proveedor</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="proveedorForm">
+                        <div class="form-group">
+                            <label for="proveedor_ruc">RUC del Proveedor:</label>
+                            <input type="text" class="form-control" id="proveedor_ruc" name="proveedor_ruc" required>
+                            <button type="button" class="btn btn-primary mt-2" onclick="fetchProveedorData()">Buscar</button>
+                        </div>
+                        <div class="form-group">
+                            <label for="proveedor_name">Nombre del Proveedor:</label>
+                            <input type="text" class="form-control" id="proveedor_name" name="proveedor_name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="proveedor_address">Dirección Legal:</label>
+                            <input type="text" class="form-control" id="proveedor_address" name="proveedor_address">
+                        </div>
+                        <div class="form-group">
+                            <label for="proveedor_district">Distrito / Ciudad:</label>
+                            <input type="text" class="form-control" id="proveedor_district" name="proveedor_district">
+                        </div>
+                        <div class="form-group">
+                            <label for="proveedor_province">Provincia:</label>
+                            <input type="text" class="form-control" id="proveedor_province" name="proveedor_province">
+                        </div>
+                        <div class="form-group">
+                            <label for="proveedor_department">Departamento:</label>
+                            <input type="text" class="form-control" id="proveedor_department" name="proveedor_department">
+                        </div>
+                        <div class="form-group">
+                            <label for="proveedor_ubigeo">Ubigeo:</label>
+                            <input type="text" class="form-control" id="proveedor_ubigeo" name="proveedor_ubigeo">
+                        </div>
+                        <div class="form-group">
+                            <label for="proveedor_phone">Teléfonos:</label>
+                            <input type="text" class="form-control" id="proveedor_phone" name="proveedor_phone">
+                        </div>
+                        <div class="form-group">
+                            <label for="proveedor_website">Página Web:</label>
+                            <input type="text" class="form-control" id="proveedor_website" name="proveedor_website">
+                        </div>
+                        <div class="form-group">
+                            <label for="proveedor_activities">Actividades Comerciales:</label>
+                            <input type="text" class="form-control" id="proveedor_activities" name="proveedor_activities">
+                        </div>
+                        <div class="form-buttons">
+                            <button type="button" class="btn btn-secondary mt-3" data-dismiss="modal">Cancelar</button>
+                            <button type="button" class="btn btn-primary mt-3" onclick="saveProveedor()">Guardar Proveedor</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/proveedor.js"></script>
+</body>
+</html>

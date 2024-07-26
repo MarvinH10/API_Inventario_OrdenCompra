@@ -1,9 +1,11 @@
 let orders = [];
 let currentSupplier = null;
 let productVariantsCache = {};
+let suppliers = [];  // Almacenar proveedores
+let mainProducts = [];  // Almacenar productos principales
 
 document.addEventListener('DOMContentLoaded', function () {
-    loadAllProductVariants();  // Precargar variantes de productos
+    cargarDatosIniciales();  // Nueva función para cargar todos los datos necesarios
 
     $('#supplierModal').on('show.bs.modal', function () {
         loadSuppliers();
@@ -11,8 +13,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     $('#productModal').on('show.bs.modal', function () {
         document.getElementById('productForm').reset();
-        document.getElementById('product_variants').innerHTML = '';  // Limpiar las variantes
-        document.getElementById('product_variants_price').innerHTML = '';  // Limpiar las variantes
+        document.getElementById('product_variants').innerHTML = '';
+        document.getElementById('product_variants_price').innerHTML = '';
         loadMainProducts();
     });
 
@@ -22,43 +24,72 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.getElementById('order_product').addEventListener('change', function () {
         const productId = this.value;
-        if (productId in productVariantsCache) {
+        if (productId && !productVariantsCache[productId]) {
+            fetch(`/get_product_variants/${productId}`)
+                .then(response => response.json())
+                .then(variants => {
+                    productVariantsCache[productId] = variants;
+                    populateProductVariants(variants);
+                })
+                .catch(error => console.error('Error loading product variants:', error));
+        } else if (productId) {
             populateProductVariants(productVariantsCache[productId]);
-        } else {
-            loadProductVariants(productId);
         }
-    });
-    document.addEventListener('productsForOrder', function (e) {
-        const productIds = e.detail.productIds;
-        loadProductsForOrder(productIds);
     });
 });
 
-function openProductModal() {
-    if (currentSupplier) {
-        $('#productModal').modal('show');
-    } else {
-        swal({
-            title: "Seleccione un proveedor primero",
-            text: "Debe seleccionar un proveedor antes de agregar productos a la orden.",
-            icon: "warning",
-            button: "OK",
-        }).then((value) => {
-            window.location.reload();
-        });
-    }
+function cargarDatosIniciales() {
+    showLoading();
+    Promise.all([
+        fetch('/get_categories').then(response => response.json()),
+        fetch('/get_attributes').then(response => response.json()),
+        fetch('/get_suppliers').then(response => response.json()),
+        fetch('/get_main_products').then(response => response.json()),
+
+    ]).then(([categoriesData, attributesData, suppliersData, mainProductsData]) => {
+        categories = categoriesData;
+        attributes = attributesData;
+        suppliers = suppliersData;
+        mainProducts = mainProductsData;
+
+        populateSuppliers();
+        populateMainProducts();
+
+        hideLoading();
+    }).catch(error => {
+        console.error('Error loading initial data:', error);
+        hideLoading();
+    });
 }
 
-function loadAllProductVariants() {
-    fetch('/get_all_product_variants')
-        .then(response => response.json())
-        .then(data => {
-            productVariantsCache = data.reduce((acc, product) => {
-                acc[product.product_id] = product.variants;
-                return acc;
-            }, {});
-        })
-        .catch(error => console.error('Error:', error));
+function populateSuppliers() {
+    const supplierSelect = document.getElementById('supplier_name');
+    supplierSelect.innerHTML = '<option value="">Seleccione un proveedor</option>';
+    suppliers.forEach(supplier => {
+        const option = new Option(supplier.name, supplier.id);
+        supplierSelect.appendChild(option);
+    });
+}
+
+function populateMainProducts() {
+    const productSelect = document.getElementById('order_product');
+    productSelect.innerHTML = '<option value="">Seleccione un producto</option>';
+    mainProducts.forEach(product => {
+        const option = new Option(product.name, product.id);
+        productSelect.appendChild(option);
+    });
+}
+
+function showLoading() {
+    document.getElementById('loadingOverlay').style.display = 'block';
+}
+
+function hideLoading() {
+    document.getElementById('loadingOverlay').style.display = 'none';
+}
+
+function openProductModal() {
+    $('#productModal').modal('show');
 }
 
 function loadSuppliers() {
@@ -221,7 +252,7 @@ function populateProductVariants(variants) {
     variantContainerPrice.innerHTML = tableHtmlPrice;
 }
 
-function addProduct() {
+function addProductorder() {
     const productId = document.getElementById('order_product').value;
     const productName = document.getElementById('order_product').selectedOptions[0].text;
     const variants = [];
@@ -251,13 +282,21 @@ function addProduct() {
         rows.forEach((row, index) => {
             const quantityInputs = row.querySelectorAll('input');
             const priceInputs = rowsPrice[index].querySelectorAll('input');
+            const rowAttribute = row.cells[0].textContent.trim();
 
             quantityInputs.forEach((input, idx) => {
                 const quantity = input.value.trim();
                 const price = priceInputs[idx].value.trim();
                 const id = input.id.split('_')[1];
                 const attributesTh = document.querySelector('#product_variants thead tr th:nth-child(' + (idx + 2) + ')');
-                const attributes = attributesTh ? attributesTh.textContent.trim() : 'Ninguno';
+                const columnAttribute = attributesTh ? attributesTh.textContent.trim() : 'Ninguno';
+
+                let attributesDescription = '';
+                if (rowAttribute !== 'Ninguno' && columnAttribute !== 'Ninguno' && columnAttribute !== 'Detalle') {
+                    attributesDescription = `${rowAttribute}, ${columnAttribute}`;
+                } else if (rowAttribute !== 'Ninguno') {
+                    attributesDescription = rowAttribute; // Solo atributo de fila
+                }
 
                 if (quantity > 0 && price > 0) {
                     variants.push({
@@ -265,7 +304,7 @@ function addProduct() {
                         quantity,
                         price,
                         name: productName,
-                        attributes
+                        attributes: attributesDescription // Descripción de atributos según las validaciones
                     });
                 }
             });
@@ -291,7 +330,6 @@ function addProduct() {
     updateOrderList();
 }
 
-
 function updateOrderList() {
     const orderList = document.getElementById('orderList');
     let totalPrice = 0;
@@ -299,11 +337,12 @@ function updateOrderList() {
 
     orders.forEach((order, index) => {
         order.variants.forEach(variant => {
+            console.log(variant);
             const orderRow = document.createElement('tr');
             orderRow.innerHTML = `
                 <td>${variant.name} (${variant.attributes})</td>
                 <td>${variant.quantity}</td>
-                <td>${variant.price_unit.toFixed(2)}</td>
+                <td>S/. ${variant.price_unit.toFixed(2)}</td>
                 <td>
                     <button class="btn btn-danger btn-sm" onclick="removeOrder(${index})"><i class="bi bi-trash"></i></button>
                 </td>
@@ -313,7 +352,7 @@ function updateOrderList() {
         });
     });
 
-    document.getElementById('totalPrice').textContent = totalPrice.toFixed(2);
+    document.getElementById('totalPrice').textContent = 'S/. ' + totalPrice.toFixed(2);
 }
 
 function removeOrder(index) {
@@ -349,33 +388,6 @@ function registerOrders() {
         alert('Hubo un error al registrar las órdenes. Por favor, inténtelo de nuevo.');
     });
 }
-document.addEventListener('DOMContentLoaded', function() {
-    // Función para obtener los IDs de productos desde la URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const productIds = urlParams.get('productIds') ? urlParams.get('productIds').split(',') : [];
-
-    if (productIds.length > 0) {
-        productIds.forEach(productId => {
-            loadProductDetails(productId);  // Cargar detalles para cada ID
-        });
-    } else {
-        console.log("No product IDs were provided.");
-    }
-});
-
-function loadProductDetails(productId) {
-    // Aquí va tu lógica para cargar los detalles del producto y mostrarlos en la página
-    console.log("Loading details for product ID:", productId);
-    // Supongamos que tienes un endpoint que devuelve detalles basados en el ID
-    fetch(`/get_product_details/${productId}`)
-        .then(response => response.json())
-        .then(details => {
-            console.log("Product details:", details);
-            // Aquí podrías añadir los detalles del producto a algún elemento HTML
-        })
-        .catch(error => console.error('Error loading product details:', error));
-}
-
 
 function showModal(title, message) {
     const modalHtml = `
@@ -479,4 +491,19 @@ function fillToStartOfColumn(inputs, startIndex, columnCount, value) {
 
 function fillAll(inputs, value) {
     inputs.forEach(input => input.value = value);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const productIds = urlParams.get('productIds') ? urlParams.get('productIds').split(',') : [];
+
+    productIds.forEach(productId => {
+        loadProductDetails(productId); // Asegúrate de implementar esta función
+    });
+});
+
+function loadProductDetails(productId) {
+    // Implementa la carga de detalles del producto
+    console.log("Cargar detalles del producto:", productId);
+    // Aquí podrías hacer una solicitud fetch a tu API para obtener los detalles del producto
 }

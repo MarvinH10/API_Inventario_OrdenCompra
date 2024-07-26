@@ -1,5 +1,6 @@
 import xmlrpc.client
 from datetime import datetime
+import requests
 
 from flask import jsonify
 
@@ -52,7 +53,8 @@ def create_product(uid, product):
         'list_price': product['sale_price'],
         'default_code': product['product_code'].replace(' ', '').upper(),
         'type': 'product',
-        'available_in_pos': True
+        'available_in_pos': True,
+        'taxes_id': [(6, 0, [5])]
     }
     print("Creating product with data:", product_template_data)
     product_template_id = models.execute_kw(DB, uid, PASSWORD, 'product.template', 'create', [product_template_data])
@@ -147,6 +149,7 @@ def update_internal_reference_by_attribute(product_id, attribute_name, new_refer
         print(f"Error: {e}")
         return False
 
+
 ### todo refrenente a ordenes de compra pa abajo
 def get_main_products(uid):
     models = xmlrpc.client.ServerProxy('{}/xmlrpc/2/object'.format(ODOO_URL))
@@ -220,3 +223,87 @@ def create_order(uid, order):
     except xmlrpc.client.Fault as e:
         print(f"XML-RPC Fault: {e}")
         return None
+
+### refeerente a proveedor
+
+def create_supplier(uid, data):
+    models = xmlrpc.client.ServerProxy('{}/xmlrpc/2/object'.format(ODOO_URL))
+
+    # Obtener el ID del tipo de identificación, por ejemplo, RUC
+    identification_type_id = get_identification_type_id(uid, 'RUC')
+    if not identification_type_id:
+        print("No se encontró el tipo de identificación RUC.")
+        return None
+
+    # Obtener detalles del distrito y asignar el ID del distrito
+    district_details = get_district_details(uid, data.get('district', ''))
+    if not district_details:
+        print("No se encontraron detalles para el distrito proporcionado.")
+        return None
+
+    # Preparar datos del proveedor, asegurándote de incluir el 'l10n_pe_district_id'
+    supplier_data = {
+        'name': data['name'],
+        'street': data.get('address', ''),
+        'city_id': district_details.get('city_id', [False])[0],
+        'zip': data.get('ubigeo', ''),
+        'state_id': district_details.get('state_id', [False])[0],
+        'country_id': district_details.get('country_id', [False])[0],
+        'vat': data['ruc'],
+        'mobile': data.get('phone', ''),
+        'website': data.get('website', ''),
+        'comment': data.get('activities', ''),
+        'is_company': True,
+        'supplier_rank': 1,
+        'l10n_latam_identification_type_id': identification_type_id
+    }
+
+    try:
+        supplier_id = models.execute_kw(DB, uid, PASSWORD, 'res.partner', 'create', [supplier_data])
+        if supplier_id:
+            print(f"Proveedor creado con éxito: {supplier_id}")
+            return supplier_id
+        else:
+            print("No se recibió un ID de proveedor tras la creación.")
+            return None
+    except Exception as e:
+        print(f"Error al intentar crear el proveedor en Odoo: {e}")
+        return None
+
+def get_identification_type_id(uid, identification_name='RUC'):
+    models = xmlrpc.client.ServerProxy('{}/xmlrpc/2/object'.format(ODOO_URL))
+    identification_type_id = models.execute_kw(DB, uid, PASSWORD, 'l10n_latam.identification.type', 'search', [[['name', '=', identification_name]]])
+    return identification_type_id[0] if identification_type_id else None
+
+def get_district_details(uid, district_name):
+    models = xmlrpc.client.ServerProxy('{}/xmlrpc/2/object'.format(ODOO_URL))
+    fields = ['name', 'city_id', 'state_id', 'country_id']
+
+    # Convertir el nombre del distrito a minúsculas para la búsqueda
+    district_name = district_name.lower()
+
+    try:
+        # Obtener todos los distritos
+        districts = models.execute_kw(DB, uid, PASSWORD, 'l10n_pe.res.city.district', 'search_read', [[]],
+                                      {'fields': fields})
+        # Filtrar el distrito insensible al caso
+        district_details = next((dist for dist in districts if dist['name'].lower() == district_name), None)
+
+        if district_details:
+            return district_details
+        else:
+            print(f"No se encontraron detalles para el distrito: {district_name}")
+            return None
+    except Exception as e:
+        print(f"Error al buscar detalles del distrito {district_name}: {e}")
+        return None
+
+def get_suppliers_data(uid):
+    models = xmlrpc.client.ServerProxy('{}/xmlrpc/2/object'.format(ODOO_URL))
+    fields = ['name', 'vat', 'street', 'city_id', 'state_id', 'country_id', 'zip', 'mobile', 'website', 'comment']
+    try:
+        suppliers = models.execute_kw(DB, uid, PASSWORD, 'res.partner', 'search_read', [[['supplier_rank', '>', 0]]], {'fields': fields})
+        return suppliers
+    except Exception as e:
+        print(f"Error retrieving suppliers data: {str(e)}")
+        return []

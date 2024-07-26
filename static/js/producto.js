@@ -1,62 +1,76 @@
 let products = [];
+let categories = [];
 let attributes = {};
 let subcategoryCache = {};
-let editingIndex = null;
 
 document.addEventListener('DOMContentLoaded', function () {
-    precargarDatos();
-    $('#productModal').on('show.bs.modal', function () {
-        // Restablecer formulario completamente
-        document.getElementById('productForm').reset();
-        document.getElementById('attributeContainer').innerHTML = ''; // Limpia los atributos dinámicos
-        ['subcategory1', 'subcategory2', 'subcategory3', 'subcategory4'].forEach(resetSubcategories);
-
-        fetch('/get_categories')
-            .then(response => response.json())
-            .then(data => {
-                const categorySelect = document.getElementById('category');
-                categorySelect.innerHTML = '<option value="">Seleccione una opción</option>';
-                data.forEach(category => {
-                    const option = document.createElement('option');
-                    option.value = category.id;
-                    option.text = category.name;
-                    categorySelect.appendChild(option);
-                });
-            })
-            .catch(error => console.error('Error:', error));
-
-        fetch('/get_attributes')
-            .then(response => response.json())
-            .then(data => {
-                attributes = data;
-            })
-            .catch(error => console.error('Error:', error));
-    });
-    document.getElementById('attributeContainer').addEventListener('click', function(event){
-        if (event.target.classList.contains('btn-outline-danger')){
-            removeAttribute(event.target);
-        }
-    });
+    // Carga inicial de todos los datos necesarios.
+    cargarDatosIniciales();
 });
 
-function precargarDatos() {
+function cargarDatosIniciales() {
+    showLoading();
     Promise.all([
         fetch('/get_categories').then(response => response.json()),
-        fetch('/get_attributes').then(response => response.json()),
-    ]).then(([categories, attrs]) => {
-        attributes = attrs;
-        const categorySelect = document.getElementById('category');
-        categorySelect.innerHTML = '<option value="">Seleccione una opción</option>';
-        categories.forEach(category => {
-            const option = new Option(category.name, category.id);
-            categorySelect.appendChild(option);
-        });
-    }).catch(error => console.error('Error:', error));
+        fetch('/get_attributes').then(response => response.json())
+    ]).then(([categoriesData, attributesData]) => {
+        categories = categoriesData;
+        attributes = attributesData;
+        populateCategories();
+        populateAttributes();
+        hideLoading();
+    }).catch(error => {
+        console.error('Error loading initial data:', error);
+        hideLoading();
+    });
 }
 
-function resetSubcategories(targetId) {
-    const subcategorySelect = document.getElementById(targetId);
+function populateCategories() {
+    const categorySelect = document.getElementById('category');
+    categorySelect.innerHTML = '<option value="">Seleccione una opción</option>';
+    categories.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category.id;
+        option.text = category.name;
+        categorySelect.appendChild(option);
+    });
+}
+
+function populateAttributes() {
+    // Suponemos que existe un contenedor para los atributos.
+    const attributeContainer = document.getElementById('attributeContainer');
+    attributeContainer.innerHTML = '';
+    Object.keys(attributes).forEach(attrId => {
+        const attr = attributes[attrId];
+        const option = document.createElement('option');
+        option.value = attr.id;
+        option.text = attr.name;
+        attributeContainer.appendChild(option);
+    });
+}
+
+// Función para mostrar el modal que ahora solo se encarga de resetear y establecer valores
+$('#productModal').on('show.bs.modal', function () {
+    document.getElementById('productForm').reset();
+    document.getElementById('attributeContainer').innerHTML = '';
+    // Restablecer subcategorías
+    ['subcategory1', 'subcategory2', 'subcategory3', 'subcategory4'].forEach(resetSubcategories);
+    document.getElementById('product_code').value = '';
+    document.getElementById('product_code').disabled = false;
+});
+
+function resetSubcategories(subcategoryId) {
+    const subcategorySelect = document.getElementById(subcategoryId);
     subcategorySelect.innerHTML = '<option value="">Seleccione una opción</option>';
+    // Aquí se puede añadir lógica para repoblar las subcategorías si es necesario.
+}
+
+function showLoading() {
+    document.getElementById('loadingOverlay').style.display = 'block';
+}
+
+function hideLoading() {
+    document.getElementById('loadingOverlay').style.display = 'none';
 }
 
 function getNextTargetId(currentId) {
@@ -100,29 +114,33 @@ function loadSubcategories(parentId, targetId) {
     }
 }
 
-function populateSubcategorySelect(data, select) {
-    select.innerHTML = '';
-    if (data.length > 0) {
-        const defaultOption = new Option('Seleccione una opción', '');
-        select.appendChild(defaultOption);
 
-        data.forEach(subcategory => {
-            const option = new Option(subcategory.name, subcategory.id);
-            select.appendChild(option);
-        });
-    } else {
-        select.appendChild(new Option('No hay más subcategorías', ''));
-        select.children[0].disabled = true;
-    }
-
-    select.onchange = () => {
-        const nextId = getNextTargetId(select.id);
-        if (nextId) loadSubcategories(select.value, nextId);
-    };
+function populateSubcategorySelect(data, select, selectedId) {
+    select.innerHTML = '<option value="">Seleccione una opción</option>';
+    data.forEach(subcategory => {
+        const option = new Option(subcategory.name, subcategory.id);
+        option.selected = (subcategory.id === selectedId);
+        select.appendChild(option);
+    });
 }
 
 function addAttribute() {
     const attributeContainer = document.getElementById('attributeContainer');
+
+    const numberOfAtributtes = attributeContainer.getElementsByClassName('form-row').length;
+    if (numberOfAtributtes >= 2) {
+        Swal.fire({
+            title: 'Advertencia!!',
+            text: 'No se pueden añadir más de dos atributos.',
+            icon: 'warning',
+            confirmButtonText: 'Ok',
+            customClass: {
+                popup: 'center-alert'
+            }
+        });
+        return;
+    }
+
     const attributeGroup = document.createElement('div');
     attributeGroup.className = 'form-row';
 
@@ -171,7 +189,7 @@ function isDuplicateAttribute(selectedAttributeId) {
     return count > 1; // Asegura que el atributo seleccionado no exceda más de una selección
 }
 
-function loadAttributeValues(select, callback) {
+function loadAttributeValues(select) {
     const attributeId = select.value;
     const valuesSelect = select.parentElement.nextElementSibling.querySelector('select');
     valuesSelect.innerHTML = '';
@@ -377,78 +395,101 @@ function addProduct() {
     document.getElementById('attributeContainer').innerHTML = '';
 }
 
-
 function updateProductList() {
     const productList = document.getElementById('productList');
     productList.innerHTML = '';
+
+    let showReferenceInternals = false;
+    let showRefAndPrices = false;
+    let showAttributes = false;
+
+    for (const product of products) {
+        if (product.product_code && product.product_code.trim().length > 0) {
+            showReferenceInternals = true;
+        }
+        for (const attr of product.attributes) {
+            if (attr.attribute_values.some(av => av.reference_extra && av.reference_extra !== 'N/A' || av.price_extra && av.price_extra !== 0)) {
+                showRefAndPrices = true;
+            }
+        }
+        if (product.attribute_names.length > 0) {
+            showAttributes = true;
+        }
+    }
+
     products.forEach((product, index) => {
         const categoryPath = [product.category_name, ...(product.subcategory_names || [])].filter(Boolean).filter(name => name !== 'Seleccione una opción').join(' / ');
 
-        // Asegurarse de que attribute_names es un array antes de usar .map()
         const attributesDisplay = (product.attribute_names || []).map(attr => {
-            if (attr.attribute_values && attr.attribute_values.length > 0) {
-                // Separar valores normales de los con referencia extra
-                const normalValues = [];
-                const extraReferenceValues = [];
-
-                attr.attribute_values.forEach(value => {
-                    if (value.includes('referencia extra')) {
-                        extraReferenceValues.push(value);
-                    } else {
-                        normalValues.push(value);
-                    }
-                });
-
-                // Concatenar primero los valores normales y luego los de referencia extra
-                return `${attr.attributeName}: ${normalValues.concat(extraReferenceValues).join(', ')}`;
-            }
-            return '';
+            return attr.attribute_values.length > 0 ? `${attr.attributeName}: ${attr.attribute_values.join(', ')}` : '';
         }).filter(attrDisplay => attrDisplay !== '').join('; ');
 
-        const refandprices = product.attributes.map(attr => {
+        const refAndPricesDisplay = product.attributes.map(attr => {
             const attributeValuesDetails = attr.attribute_values.map(av => {
-                return `Referencia Extra: ${av.reference_extra || 'N/A'}, Precio Extra: S/.${av.price_extra.toFixed(2)}`;
-            }).join(', ');
-            return `${attributeValuesDetails}`;
-        }).join('; ');
+                const refExtra = av.reference_extra && av.reference_extra !== 'N/A' ? `<li>Referencia Extra: ${av.reference_extra}</li>` : '';
+                const priceExtra = av.price_extra && av.price_extra !== 0 ? `<li>Precio Extra: S/.${av.price_extra.toFixed(2)}</li>` : '';
+                return [refExtra, priceExtra].filter(detail => detail).join('');
+            }).join('');
+            return attributeValuesDetails ? `<ul>${attributeValuesDetails}</ul>` : '';
+        }).join(' ');
 
-        const productRow = document.createElement('tr');
-        productRow.innerHTML = `
+        let rowContent = `
             <td>${product.product_name}</td>
             <td>${categoryPath}</td>
             <td>S/. ${product.sale_price.toFixed(2)}</td>
-            <td>${product.product_code ? product.product_code : 'N/A'}</td>
-            <td>${refandprices ? refandprices : 'N/A'}</td>
-            <td>${attributesDisplay ? attributesDisplay : 'N/A'}</td>
+        `;
+
+        if (showReferenceInternals) {
+            rowContent += `<td>${product.product_code || ''}</td>`;
+        }
+
+        if (showRefAndPrices) {
+            rowContent += `<td>${refAndPricesDisplay}</td>`;
+        }
+
+        if (showAttributes) {
+            rowContent += `<td>${attributesDisplay}</td>`;
+        }
+
+        rowContent += `
             <td>
                 <button class="btn btn-info btn-sm" data-toggle="modal" data-target="#editProductModal" onclick="editProduct(${index})"><i class="bi bi-pencil-square"></i></button>
                 <button class="btn btn-secondary btn-sm" onclick="duplicateProduct(${index})"><i class="bi bi-files"></i></button>
                 <button class="btn btn-danger btn-sm" onclick="removeProduct(${index})"><i class="bi bi-trash"></i></button>
             </td>
         `;
+
+        const productRow = document.createElement('tr');
+        productRow.innerHTML = rowContent;
         productList.appendChild(productRow);
     });
+
+    // Ajustar la visibilidad de las cabeceras de las columnas
+    document.getElementById('internalRefHeader').style.display = showReferenceInternals ? '' : 'none';
+    document.getElementById('extrasRefHeader').style.display = showRefAndPrices ? '' : 'none';
+    document.getElementById('attributesValuesHeader').style.display = showAttributes ? '' : 'none';
 }
 
-function editProduct(index){
+function editProduct(index) {
     editingIndex = index;
     const product = products[index];
+
     document.getElementById('edit_product_name').value = product.product_name;
-    document.getElementById('edit_sale_price').value = product.sale_price;
+    document.getElementById('edit_sale_price').value = product.sale_price.toFixed(2);
     document.getElementById('edit_product_code').value = product.product_code;
 
-    loadCategories('#editProductForm', () => {
-        $('#edit_category').val(product.category).trigger('change');
-        loadSubcategories(product.category, 'edit_subcategory1', product.subcategories[0], () => {
-            loadSubcategories(product.subcategories[0], 'edit_subcategory2', product.subcategories[1], () => {
-                loadSubcategories(product.subcategories[1], 'edit_subcategory3', product.subcategories[2], () => {
-                    loadSubcategories(product.subcategories[2], 'edit_subcategory4', product.subcategories[3]);
-                });
-            });
-        });
+    const categorySelect = document.getElementById('edit_category');
+    categorySelect.onchange = () => {
+        loadSubcategoriesRecursively(0, categorySelect.value, []);
+    };
+
+    populateCategoriesEdit(() => {
+        categorySelect.value = product.category;
+        loadSubcategoriesRecursively(0, product.category, product.subcategories);
     });
 
-    document.getElementById('edit_attributeContainer').innerHTML = '';
+    const attributeContainer = document.getElementById('edit_attributeContainer');
+    attributeContainer.innerHTML = '';
     product.attributes.forEach(attr => {
         addEditAttribute(attr);
     });
@@ -456,103 +497,202 @@ function editProduct(index){
     $('#editProductModal').modal('show');
 }
 
-function addEditAttribute(){
+function loadSubcategoriesRecursively(level, parentId, subcategories) {
+    const targetId = `edit_subcategory${level + 1}`;
+
+    // Restablecer todas las subcategorías siguientes antes de cargar la nueva
+    for (let i = level + 1; i <= 4; i++) {
+        const subId = `edit_subcategory${i}`;
+        document.getElementById(subId).innerHTML = '<option value="">Seleccione una opción</option>';
+    }
+
+    // Cargar la subcategoría actual y configurar el siguiente nivel, si procede
+    if (level < 4) {
+        loadSubcategoriesEdit(parentId, targetId, subcategories[level], () => {
+            if (level + 1 < subcategories.length) {
+                loadSubcategoriesRecursively(level + 1, subcategories[level], subcategories);
+            }
+        });
+    }
+}
+
+function loadSubcategoriesEdit(parentId, targetId, selectedId, callback) {
+    const subcategorySelect = document.getElementById(targetId);
+    subcategorySelect.innerHTML = '<option value="">Seleccione una opción</option>';
+
+    if (!parentId) {
+        if (callback) callback();
+        return;
+    }
+
+    if (subcategoryCache[parentId]) {
+        populateSubcategorySelect(subcategoryCache[parentId], subcategorySelect, selectedId);
+        setupSubcategoryChangeEvent(targetId);
+        if (callback) callback();
+    } else {
+        fetch(`/get_subcategories/${parentId}`)
+            .then(response => response.json())
+            .then(data => {
+                subcategoryCache[parentId] = data;
+                populateSubcategorySelect(data, subcategorySelect, selectedId);
+                setupSubcategoryChangeEvent(targetId);
+                if (callback) callback();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                subcategorySelect.appendChild(new Option('Error al cargar datos', ''));
+                if (callback) callback();
+            });
+    }
+}
+
+function setupSubcategoryChangeEvent(targetId) {
+    const selectElement = document.getElementById(targetId);
+    const nextTargetId = getNextTargetId(targetId);
+    if (nextTargetId) {
+        selectElement.onchange = () => {
+            // Restablecer y cargar la siguiente subcategoría cuando se selecciona una opción
+            loadSubcategories(selectElement.value, nextTargetId);
+        };
+    }
+}
+
+function populateCategoriesEdit(callback) {
+    const categorySelect = document.getElementById('edit_category');
+    categorySelect.innerHTML = '<option value="">Seleccione una opción</option>';
+    categories.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category.id;
+        option.text = category.name;
+        categorySelect.appendChild(option);
+    });
+    if (callback) callback();
+}
+
+function addEditAttribute(attributeData) {
     const attributeContainer = document.getElementById('edit_attributeContainer');
     const attributeGroup = document.createElement('div');
     attributeGroup.className = 'form-row';
+    attributeContainer.appendChild(attributeGroup);
 
     attributeGroup.innerHTML = `
         <div class="">
             <label for="attribute">Atributo:</label>
             <select name="attribute" class="form-control" onchange="loadAttributeValues(this)">
-                <option value="">Seleccione un atributo</option>
                 ${Object.keys(attributes).map(attrId => `<option value="${attrId}" ${attrId === attributeData.attribute ? 'selected' : ''}>${attributes[attrId].name}</option>`).join('')}
             </select>
         </div>
         <div class="col">
             <label for="attribute_values">Valores de Atributo:</label>
-            <select name="attribute_values" class="form-control" multiple="multiple" onchange="addPriceFields(this); addReferenceFields(this)">
-                <option value="" disabled>Seleccione un valor</option>
+            <select name="attribute_values" class="form-control" multiple="multiple">
+                <!-- valores se cargarán mediante loadAttributeValues -->
             </select>
         </div>
         <div class="col">
-            <div class="price_extra_div">
-                <label for="attribute_prices">Precios Extra:</label>
-                <div name="attribute_prices" class="form-group"></div>
+            <label for="attribute_prices">Precios Extra:</label>
+            <div name="attribute_prices" class="form-group">
+                <!-- precios se cargarán dinámicamente -->
             </div>
-            <div class="reference_extra_div">
-                <label for="product_code">Referencias Extra:</label>
-                <div name="product_code" id="product_code" class="form-group"></div>
+        </div>
+        <div class="col">
+            <label for="product_code">Referencias Extra:</label>
+            <div name="product_code" class="form-group">
+                <!-- referencias se cargarán dinámicamente -->
             </div>
         </div>
         <div class="">
-            <br/>
-            <button type="button" class="btn btn-outline-danger mt-2"><i class="bi bi-trash-fill"></i> Eliminar</button>
+            <button type="button" class="btn btn-outline-danger mt-2" onclick="removeAttribute(this)"><i class="bi bi-trash-fill"></i> Eliminar</button>
         </div>
     `;
-    attributeContainer.appendChild(attributeGroup);
-    loadAttributeValuesInitial(attributeGroup.querySelector('select[name="attribute"]'), attributeData);
-    $(attributeGroup).find('select[name="attribute_values"]').select2();
+
+    // Cargar valores de atributo seleccionados y precios adicionales
+    loadAttributeValuesForEdit(attributeGroup.querySelector('select[name="attribute"]'), attributeData);
 }
 
-function loadAttributeValuesInitial(select, attributeData) {
+function loadAttributeValuesForEdit(select, attributeData) {
     const attributeId = select.value;
     const valuesSelect = select.parentElement.nextElementSibling.querySelector('select[name="attribute_values"]');
+    valuesSelect.innerHTML = '';
 
-    if (attributes[attributeId] && attributes[attributeId].values.length > 0) {
-        attributes[attributeId].values.forEach(value => {
-            const option = document.createElement('option');
-            option.value = value.id;
-            option.text = value.name;
-            option.selected = attributeData.values.includes(value.id);
-            valuesSelect.appendChild(option);
+    if (isDuplicateAttribute(attributeId)) {
+        Swal.fire({
+            title: 'Error',
+            text: 'Este atributo ya ha sido seleccionado.',
+            icon: 'error',
+            confirmButtonText: 'Ok',
+            customClass: {
+                popup: 'center-alert'
+            }
         });
-        $(valuesSelect).trigger('change');
+        select.value = ""; // Reset the value to not selected
+        return;
     }
 
-    // Llamar a las funciones para cargar los precios y referencias con los valores preexistentes
-    addPriceFieldsWithValues(valuesSelect, attributeData.price_extra);
-    addReferenceFieldsWithValues(valuesSelect, attributeData.reference_extra);
+    // Asegúrate de que los datos del atributo existan antes de intentar acceder a ellos
+    if (attributes[attributeId] && attributes[attributeId].values) {
+        attributes[attributeId].values.forEach(value => {
+            const isSelected = attributeData.values.some(v => v.id === value.id);
+            const option = new Option(value.name, value.id, isSelected, isSelected);
+            valuesSelect.appendChild(option);
+        });
+    } else {
+        // Si no hay valores disponibles para el atributo
+        valuesSelect.appendChild(new Option('No hay valores disponibles', '', true, true));
+    }
+
+    $(valuesSelect).select2(); // Inicializa select2 para el nuevo contenido
+    setupExtraFieldsForEdit(valuesSelect, attributeData); // Configura los campos extras
 }
 
-function addPriceFieldsWithValues(select, prices) {
-    const priceDiv = select.parentElement.nextElementSibling.querySelector('[name="attribute_prices"]');
-    prices.forEach(price => {
-        const input = document.createElement('input');
-        input.type = 'number';
-        input.className = 'form-control mb-2';
-        input.value = price.value;
-        input.setAttribute('data-value-id', price.id);
-        priceDiv.appendChild(input);
+function setupExtraFieldsForEdit(valuesSelect, attributeData) {
+    const pricesDiv = valuesSelect.parentElement.nextElementSibling.querySelector('[name="attribute_prices"]');
+    const referencesDiv = valuesSelect.parentElement.nextElementSibling.querySelector('[name="product_code"]');
+    pricesDiv.innerHTML = '';
+    referencesDiv.innerHTML = '';
+
+    // Iterar sobre cada valor de atributo y establecer campos de entrada para precios y referencias
+    attributeData.values.forEach(val => {
+        // Precios extras
+        const priceInput = document.createElement('input');
+        priceInput.type = 'number';
+        priceInput.className = 'form-control mb-2';
+        priceInput.value = val.price_extra || 0;
+        priceInput.setAttribute('data-value-id', val.id);
+        pricesDiv.appendChild(priceInput);
+
+        // Referencias extras
+        const referenceInput = document.createElement('input');
+        referenceInput.type = 'text';
+        referenceInput.className = 'form-control mb-2';
+        referenceInput.value = val.reference_extra || '';
+        referenceInput.setAttribute('data-value-id', val.id);
+        referencesDiv.appendChild(referenceInput);
     });
 }
 
-function addReferenceFieldsWithValues(select, references) {
-    const referenceDiv = select.parentElement.nextElementSibling.querySelector('[name="product_code"]');
-    references.forEach(ref => {
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.className = 'form-control mb-2';
-        input.value = ref.value;
-        input.setAttribute('data-value-id', ref.id);
-        referenceDiv.appendChild(input);
-    });
-}
-
-function updateProduct(){
+function updateProduct() {
     if (editingIndex === null) return;
 
     const editedProduct = products[editingIndex];
     editedProduct.product_name = document.getElementById('edit_product_name').value;
     editedProduct.sale_price = parseFloat(document.getElementById('edit_sale_price').value);
     editedProduct.product_code = document.getElementById('edit_product_code').value;
+
+    // Actualizar categoría y subcategorías
     editedProduct.category = document.getElementById('edit_category').value;
+    editedProduct.category_name = document.getElementById('edit_category').selectedOptions[0].text;
     editedProduct.subcategories = [
         document.getElementById('edit_subcategory1').value,
         document.getElementById('edit_subcategory2').value,
         document.getElementById('edit_subcategory3').value,
         document.getElementById('edit_subcategory4').value
     ].filter(sub => sub !== '');
+    editedProduct.subcategory_names = [
+        document.getElementById('edit_subcategory1').selectedOptions[0]?.text,
+        document.getElementById('edit_subcategory2').selectedOptions[0]?.text,
+        document.getElementById('edit_subcategory3').selectedOptions[0]?.text,
+        document.getElementById('edit_subcategory4').selectedOptions[0]?.text
+    ].filter(name => name && name !== 'Seleccione una opción');
 
     editedProduct.attributes = Array.from(document.querySelectorAll('#edit_attributeContainer .form-row')).map(attrRow => {
         return {
@@ -621,7 +761,7 @@ function registerProducts() {
 function showProductLinks(productIds) {
     const linksContainer = document.getElementById('productLinks');
     linksContainer.innerHTML = '';  // Limpiar enlaces anteriores
-    
+
     productIds.forEach(id => {
         const link = document.createElement('a');
         link.href = `https://kdoshstoreproof.odoo.com/odoo/action-704/${id}?cids=1-2`;
@@ -631,30 +771,21 @@ function showProductLinks(productIds) {
         linksContainer.appendChild(document.createElement('br'));
     });
 
-    const createOrderButton = document.createElement('button');
-    createOrderButton.textContent = 'Crear Orden de Compra';
-    createOrderButton.classList.add('btn', 'btn-primary');
-    createOrderButton.onclick = () => {
-        window.location.href = `/ordenes?productIds=${productIds.join(',')}`;
-};
-    linksContainer.appendChild(createOrderButton);
-
     $('#productLinksModal').modal('show');
 }
 
-function emitProductIdsEvent(productIds) {
-    // Emitir evento personalizado con los IDs de productos
-    const event = new CustomEvent('productsForOrder', { detail: { productIds } });
-    document.dispatchEvent(event);
+function redirectToOrderPage() {
+    let productIds = collectProductIds();
+    window.location.href = `/ordenes?productIds=${productIds.join(',')}`;
 }
 
+function collectProductIds() {
+    let productIds = [];
+    const productEntries = document.querySelectorAll('.product-entry'); // Asegúrate de que tus productos tienen esta clase
+    productEntries.forEach(entry => {
+        productIds.push(entry.dataset.productId); // Asegúrate de que cada producto tiene un data-productId
+    });
+    return productIds;
+}
 
-
-
-
-
-
-
-
-
-
+document.getElementById('createOrderButton').addEventListener('click', redirectToOrderPage);

@@ -10,6 +10,12 @@
     <link rel="icon" href="data:;base64,iVBORw0KGgo=">
 </head>
 <body>
+    <div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5) url('../static/gif/gif_format2.gif') center no-repeat;">
+        <!-- Mensaje opcional -->
+        <p style="color: white; text-align: center; position: absolute; top: 60%; left: 50%; transform: translate(-50%, -50%);">
+            Cargando datos...
+        </p>
+    </div>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <a class="navbar-brand" href="#">Gestión Odoo</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -26,6 +32,9 @@
                 <li class="nav-item active">
                     <a class="nav-link" href="/ordenes">Órdenes de Compra</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/proveedor">Gestión de Proveedores</a>
+                </li>
             </ul>
         </div>
     </nav>
@@ -36,7 +45,7 @@
                 <i class="bi bi-pencil"></i> Seleccionar Proveedor
             </button>
         </div>
-        <button type="button" class="btn btn-primary mt-3" data-toggle="modal" id="addProductButton" data-target="#productModal" disabled>Agregar Productos</button>
+        <button type="button" class="btn btn-primary mt-3" data-toggle="modal" id="addProductButton" data-target="#productModal">Agregar Productos</button>
         <table class="table table-bordered mt-3">
             <thead>
                 <tr>
@@ -67,6 +76,6 @@
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
-    <script src="/static/js/ordenes.js"></script>
+    <script src="{{ url_for('static', filename='js/ordenes.js') }}"></script>
 </body>
 </html>

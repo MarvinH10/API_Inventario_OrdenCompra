@@ -13,6 +13,12 @@
     <link rel="icon" href="data:;base64,iVBORw0KGgo=">
 </head>
 <body>
+    <div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5) url('../static/gif/gif_format2.gif') center no-repeat;">
+        <!-- Mensaje opcional -->
+        <p style="color: white; text-align: center; position: absolute; top: 60%; left: 50%; transform: translate(-50%, -50%);">
+            Cargando datos...
+        </p>
+    </div>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <a class="navbar-brand" href="#">Gestión Odoo</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -28,6 +34,9 @@
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="/ordenes">Órdenes de Compra</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/proveedor">Gestión de Proveedores</a>
                 </li>
             </ul>
         </div>
@@ -49,9 +58,9 @@
                         <th>Producto</th>
                         <th>Categorías</th>
                         <th>Precio Venta</th>
-                        <th>Referencia Interna</th>
-                        <th>Referencia-Precio Extras</th>
-                        <th>Valores de Atributos</th>
+                        <th id="internalRefHeader">Referencia Interna</th>
+                        <th id="extrasRefHeader">Referencia-Precio Extras</th>
+                        <th id="attributesValuesHeader">Valores de Atributos</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>

@@ -89,7 +89,7 @@
                         </div>
                         <div class="form-groupname">
                             <label for="edit_product_code">Código del Producto:</label>
-                            <input type="text" class="form-control" id="edit_product_code" name="edit_product_code" required>
+                            <input type="text" class="form-control" id="edit_product_code" name="edit_product_code">
                         </div>
                     </div>
                     <div class="category-container">
@@ -101,25 +101,25 @@
                         </div>
                         <div class="form-group">
                             <label for="edit_subcategory1">Área Aplicación:</label>
-                            <select class="form-control" id="edit_subcategory1" name="edit_subcategory1" onchange="loadSubcategories(this.value, 'edit_subcategory2')" disabled>
+                            <select class="form-control" id="edit_subcategory1" name="edit_subcategory1" onchange="loadSubcategories(this.value, 'edit_subcategory2')">
 
                             </select>
                         </div>
                         <div class="form-group">
                             <label for="edit_subcategory2">Tipo de Producto:</label>
-                            <select class="form-control" id="edit_subcategory2" name="edit_subcategory2" onchange="loadSubcategories(this.value, 'edit_subcategory3')" disabled>
+                            <select class="form-control" id="edit_subcategory2" name="edit_subcategory2" onchange="loadSubcategories(this.value, 'edit_subcategory3')">
 
                             </select>
                         </div>
                         <div class="form-group">
                             <label for="edit_subcategory3">Activo / Presentación:</label>
-                            <select class="form-control" id="edit_subcategory3" name="edit_subcategory3" onchange="loadSubcategories(this.value, 'edit_subcategory4')" disabled>
+                            <select class="form-control" id="edit_subcategory3" name="edit_subcategory3" onchange="loadSubcategories(this.value, 'edit_subcategory4')">
 
                             </select>
                         </div>
                         <div class="form-group">
                             <label for="edit_subcategory4">Marca:</label>
-                            <select class="form-control" id="edit_subcategory4" name="edit_subcategory4" disabled>
+                            <select class="form-control" id="edit_subcategory4" name="edit_subcategory4">
 
                             </select>
                         </div>
@@ -133,7 +133,7 @@
                         <!-- Atributos se llenarán dinámicamente -->
                     </div>
                     <div class="form-buttons">
-                        <button type="button" class="btn btn-secondary mt-3" id="edit_addAttributeButton" onclick="addEditAttribute()" disabled><i class="bi bi-plus-circle"></i> Nuevo Atributo</button>
+                        <button type="button" class="btn btn-secondary mt-3" id="edit_addAttributeButton" onclick="addEditAttribute()"><i class="bi bi-plus-circle"></i> Nuevo Atributo</button>
                         <button type="button" id="modalActionButton" class="btn btn-primary mt-3" onclick="updateProduct()">Actualizar Producto</button>
                     </div>
                 </form>
@@ -157,7 +157,7 @@
                 <div id="productLinks"></div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" onclick="createOrderFromProducts()">Crear Orden de Compra</button>
+                <button type="button" class="btn btn-primary" id="createOrderButton" onclick="redirectToOrderPage()">Crear Orden de Compra</button>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
             </div>
         </div>
