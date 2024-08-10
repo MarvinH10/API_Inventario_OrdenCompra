@@ -4,10 +4,10 @@ import requests
 
 from flask import jsonify
 
-ODOO_URL = 'https://kdoshstoreproof.odoo.com'
-DB = 'kdoshstoreproof'
-USERNAME = 'j99crispin@gmail.com'
-PASSWORD = '952fe0212b885854888fb8f720ce64d448512e30'
+ODOO_URL = 'tu_url_odoo'
+DB = 'tu_base_de_datos'
+USERNAME = 'tu_correo'
+PASSWORD = 'tu_token'
 
 #CONEXIÓN CON EL SERVIDOR XML-RPC
 def authenticate():
